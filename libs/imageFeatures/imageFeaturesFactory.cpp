@@ -94,4 +94,5 @@ ImageFeatures* ImageFeaturesFactory::create(string confFilePath)
         features = new GaborFeature(gabor, features);
     }
     PRINT_DEBUG("Dimensions = %d", features->getDimentions());
+    return features;
 }
