@@ -1,9 +1,9 @@
 %YAML:1.0
 useMAHALANOBIS: 0
-useSVM: 0
+useSVM: 1
 useKNN: 0
 useNN: 0
-useRTREE: 1
+useRTREE: 0
 
 SVM_LINEAR: 1 
 SVM_RBF: 0 

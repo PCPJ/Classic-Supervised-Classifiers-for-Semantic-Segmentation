@@ -85,32 +85,13 @@ ImageFeatures* ImageFeaturesFactory::create(string confFilePath)
     ImageFeatures* features = multiF;
 
     if(useGaborFilter){
-        vector<double> thetas;
-        thetas.push_back(0 * M_PI/180.0);//here
-//        thetas.push_back(15 * M_PI/180.0);
-//        thetas.push_back(30 * M_PI/180.0);
-//        thetas.push_back(45 * M_PI/180.0);
-//        thetas.push_back(60 * M_PI/180.0);
-//        thetas.push_back(75 * M_PI/180.0);
-        thetas.push_back(90 * M_PI/180.0);//here
-//        thetas.push_back(105 * M_PI/180.0);
-//        thetas.push_back(120 * M_PI/180.0);
-//        thetas.push_back(135 * M_PI/180.0);
-//        thetas.push_back(150 * M_PI/180.0);
-//        thetas.push_back(165 * M_PI/180.0);
-        vector<int> waveLengths;
-//        waveLengths.push_back(3);
-        waveLengths.push_back(9);//here
-        waveLengths.push_back(15);//here
-//        waveLengths.push_back(21);
-//        waveLengths.push_back(27);
-//        waveLengths.push_back(33);
-//        waveLengths.push_back(39);
-//        waveLengths.push_back(51);
+        Mat thetas;
+        Mat waveLengths;
+        file["gaborOrients"] >> thetas;
+        file["gaborWaveLengths"] >> waveLengths;
         GaborTexture gabor(thetas, waveLengths);
 //        GaborTexture gabor(waveLengths, GaborTexture::CIRCULAR);
         features = new GaborFeature(gabor, features);
-//        multiF->concatFeat(new GaborFeature(gabor, new LuminanceFeature()));
     }
     PRINT_DEBUG("Dimensions = %d", features->getDimentions());
 }

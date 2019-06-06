@@ -7,7 +7,7 @@ public:
     GaborTexture(uchar lambdaMethod = LAMBDA_JAIN);
     GaborTexture(const cv::Mat& inImage, uchar lambdaMethod = LAMBDA_JAIN);
     GaborTexture(std::vector<double> thetas, uchar lambdaMethod = LAMBDA_JAIN);
-    GaborTexture(std::vector<double> thetas, std::vector<int> waveLengths);
+    GaborTexture(cv::Mat& thetas, cv::Mat& waveLengths);
     GaborTexture(std::vector<int> waveLengths, uchar lambdaMethod = CIRCULAR);
     GaborTexture(const GaborTexture& gabor);
     virtual ~GaborTexture();
@@ -41,6 +41,7 @@ private:
     int lambdaSize;
     int directions;
     std::vector<double> thetas;
+    std::vector<double> waveLengths;
     std::vector<double> lambdas;
     std::vector<cv::Mat> kernels;
     std::vector<cv::Mat> smoothKernels;

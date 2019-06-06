@@ -185,34 +185,41 @@ GaborTexture::GaborTexture(std::vector<double> thetas, uchar lambdaMethod)
         saveKernels(debugKernelPath);
 }
 
-GaborTexture::GaborTexture(std::vector<double> thetas, std::vector<int> waveLengths)
+GaborTexture::GaborTexture(cv::Mat& thetas, cv::Mat& waveLengths)
 {
+    assert(thetas.data && waveLengths.data);
+    assert(thetas.type() == CV_32FC1);
+    assert(waveLengths.type() == CV_32FC1);
+
     string debugKernelPath = "gaborKernels";
 
     float gamma = 1.0;
     float b = 1;
     float phi = 0; //pi/2
 
-    directions = thetas.size();
-    this->thetas = thetas;
+    directions = thetas.rows;
+    for(int i = 0; i < thetas.rows; i++)
+        this->thetas.push_back(thetas.at<float>(i,0));
+    for(int i = 0; i < waveLengths.rows; i++)
+        this->waveLengths.push_back(waveLengths.at<float>(i,0));
 
     if(DEBUG){
-        for(int i = 0; i < waveLengths.size(); i++){
-            cout << "kernel Size " << i << " = " << waveLengths[i] << endl;
+        for(int i = 0; i < waveLengths.rows; i++){
+            cout << "Wave lengths " << i << " = " << waveLengths.at<float>(i,0) << endl;
         }
-        for(int i = 0; i < thetas.size(); i++){
-            cout << "theta " << i << " = " << thetas[i] << endl;
+        for(int i = 0; i < thetas.rows; i++){
+            cout << "theta " << i << " = " << thetas.at<float>(i,0) << endl;
         }
     }
 
     float ratioSigLamb = (1.0/M_PI) * 0.588705011257737 * ((pow(2.0,(double)b)+1) / (pow(2.0,(double)b)-1));
 
     kernelMaxSize = std::numeric_limits<int>::min();
-    for(int i = 0; i < waveLengths.size(); i++){
-        int size = waveLengths[i]*4 + 1;
-        double sigma = ratioSigLamb * waveLengths[i];
+    for(int i = 0; i < waveLengths.rows; i++){
+        int size = this->waveLengths[i]*4 + 1;
+        double sigma = ratioSigLamb * this->waveLengths[i];
         for(int j = 0; j < directions; j++){
-            Mat kernel = cv::getGaborKernel(Size(size, size), sigma, thetas[j], waveLengths[i], gamma, phi, CV_32F);
+            Mat kernel = cv::getGaborKernel(Size(size, size), sigma, this->thetas[j], this->waveLengths[i], gamma, phi, CV_32F);
             Mat gausKernel = cv::getGaussianKernel(sigma*6+1, sigma*2, CV_32F);
             gausKernel = gausKernel * gausKernel.t();
             kernels.push_back(kernel);

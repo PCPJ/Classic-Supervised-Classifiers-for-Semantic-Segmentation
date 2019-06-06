@@ -3,9 +3,20 @@ useRGB: 1
 useEXG: 0 
 useEXR: 0
 useEXGEXR: 0
-useGaborFilter: 0 
-useGLCM: 1
+useGaborFilter: 1 
+useGLCM: 0
 
+gaborOrients: !!opencv-matrix
+   rows: 2
+   cols: 1
+   dt: "f"
+   data: [ 0, 90 ] 
+
+gaborWaveLengths: !!opencv-matrix
+   rows: 2
+   cols: 1
+   dt: "f"
+   data: [ 9, 15 ]
 
 glcmWindowSize: 51
 glcmContrast: 1
