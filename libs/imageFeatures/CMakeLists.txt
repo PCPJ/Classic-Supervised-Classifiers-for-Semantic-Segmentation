@@ -13,6 +13,7 @@ list(APPEND sourcesList gaborFeatures.cpp)
 list(APPEND sourcesList luminanceFeatures.cpp)
 list(APPEND sourcesList glcmFeatures.cpp)
 list(APPEND sourcesList glcm.cpp)
+list(APPEND sourcesList imageFeaturesFactory.cpp)
 add_library(ImageFeatures_LIBS ${sourcesList})
 target_link_libraries(ImageFeatures_LIBS Gabor_LIBS)
 
