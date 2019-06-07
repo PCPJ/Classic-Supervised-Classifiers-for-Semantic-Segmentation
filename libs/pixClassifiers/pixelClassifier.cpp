@@ -3,9 +3,11 @@
 
 #include <omp.h>
 #include <opencv2/opencv.hpp>
+#include <experimental/filesystem>
 
 using namespace std;
 using namespace cv;
+namespace fs = std::experimental::filesystem::v1;
 
 PixelClassifier::PixelClassifier(ImageFeatures* calculator)
     : featureCalculator(calculator)
@@ -17,63 +19,110 @@ PixelClassifier::~PixelClassifier()
 
 }
 
-bool PixelClassifier::loadTrainData(string path)
+bool PixelClassifier::loadTrainData(string trainDataConfFilePath, string colorsConfFilePath)
 {
-    FileStorage file(path, FileStorage::READ);
-    if(!file.isOpened()){
-        PRINT_DEBUG("Canot opencv file %s", path);
+    FileStorage trainDataFile(trainDataConfFilePath, FileStorage::READ);
+    FileStorage colorsConfFile(colorsConfFilePath, FileStorage::READ);
+    if(!trainDataFile.isOpened()){
+        PRINT_DEBUG("Can't open file %s", trainDataConfFilePath);
         return false;
     }
+    if(!colorsConfFile.isOpened()){
+        PRINT_DEBUG("Can't open file %s", colorsConfFilePath);
+        return false;
+    }
+    Mat colors;
+    colorsConfFile["colors"] >> colors;
 
     int numberOfClasses;
-    int numberOfLabeledImages;
-    int numberOfAnotatedImages;
-    file["numberOfClasses"] >> numberOfClasses;
-    file["numberOfLabeled"] >> numberOfLabeledImages;
-    file["numberOfAnotated"] >> numberOfAnotatedImages;
-    PRINT_DEBUG("\n\tNumber of classes = %d \n\tNumber of Labeled Image = %d \n\tNumber of Anotated Image = %d",
-                numberOfClasses, numberOfLabeledImages, numberOfAnotatedImages);
+    string gtImagesPath;
+    string gtPath;
+    string annotationsImagesPath;
+    string annotationsPath;
+    trainDataFile["numberOfClasses"] >> numberOfClasses;
+    trainDataFile["gtImagesPath"] >> gtImagesPath;
+    trainDataFile["gtPath"] >> gtPath;
+    trainDataFile["annotationsImagesPath"] >> annotationsImagesPath;
+    trainDataFile["annotationsPath"] >> annotationsPath;
 
-    for(int i = 0; i < numberOfLabeledImages; i++){
-        string imagePath;
-        string labelPath;
-        file["labelSample"+to_string(i)] >> imagePath;
-        file["label"+to_string(i)] >> labelPath;
-        Mat imageI = imread(imagePath);
-        Mat labelI = imread(labelPath, CV_LOAD_IMAGE_GRAYSCALE);
-        assert(imageI.data);
-        assert(labelI.data);
-        assert(imageI.size() == labelI.size());
-        assert(imageI.type() == CV_8UC3);
-        assert(labelI.type() == CV_8UC1);
-        labelI.convertTo(labelI, CV_32SC1);
-        addTrainData(imageI, labelI);
-    }
-    for(int i = 0; i < numberOfAnotatedImages; i++){
-        string imagePath;
-        file["anotationSample"+to_string(i)] >> imagePath;
-        Mat imageI = imread(imagePath);
-        assert(imageI.data);
-        assert(imageI.type() == CV_8UC3);
-        vector<vector<Point> > coords;
-        for(int n = 0; n < numberOfClasses; n++){
-            Mat c;
-            vector<Point> vec;
-            string name = "anotation"+to_string(i)+"-"+to_string(n);
-            file[name] >> c;
-            if(c.data){
-                assert(c.cols == 2);
-                assert(c.type() == CV_32SC1);
-                vec.reserve(c.rows);
-                for(int r = 0; r < c.rows; r++){
-                    Vec2i v = c.at<Vec2i>(r, 0);
-                    Point p(v[1], v[0]);
-                    vec.push_back(p);
+    PRINT_DEBUG("\n\tNumber of classes = %d \n\tGT original images path = %s \n\tGT images path = %s"
+                "\n\tAnnotations original images path = %s \n\tAnnotations images path = %s",
+                numberOfClasses, gtImagesPath.c_str(), gtPath.c_str(), annotationsImagesPath.c_str(), annotationsPath.c_str());
+
+    vector<pair<fs::path, fs::path> > gtPathsVector;
+    vector<pair<fs::path, fs::path> > annotationsPathsVector;
+    if(gtPath != "" && gtImagesPath != ""){
+        for(const fs::directory_entry& entry : fs::directory_iterator(gtPath)){
+            if(entry.status().type() != fs::file_type::directory){
+                if(entry.path().extension() == ".png" || entry.path().extension() == ".jpg"){
+                    fs::path originalImagePath = gtImagesPath;
+                    originalImagePath /= entry.path().filename();
+                    if(fs::exists(originalImagePath)){
+                        gtPathsVector.push_back(make_pair(originalImagePath, entry.path()));
+                    }
                 }
             }
-            coords.push_back(vec);
         }
-        addTrainData(imageI, coords);
+    }
+    if(annotationsPath != "" && annotationsImagesPath != ""){
+        for(const fs::directory_entry& entry : fs::directory_iterator(annotationsPath)){
+            if(entry.status().type() != fs::file_type::directory){
+                if(entry.path().extension() == ".png" || entry.path().extension() == ".jpg"){
+                    fs::path originalImagePath = annotationsImagesPath;
+                    originalImagePath /= entry.path().filename();
+                    if(fs::exists(originalImagePath)){
+                        annotationsPathsVector.push_back(make_pair(originalImagePath, entry.path()));
+                    }
+                }
+            }
+        }
+    }
+
+    for(const auto& paths : gtPathsVector){
+        Mat image = imread(paths.first.string());
+        Mat gt = imread(paths.second.string());
+        assert(image.data);
+        assert(gt.data);
+        assert(image.size() == gt.size());
+        assert(image.type() == CV_8UC3);
+        assert(gt.type() == CV_8UC3);
+        Mat label = Mat(image.size(), CV_32SC1);
+        for(int i = 0; i < image.rows; i++){
+            for(int j = 0; j < image.cols; j++){
+                int l = -1;
+                for(int c = 0; c < colors.rows; c++){
+                    if(gt.at<Vec3b>(i,j) == colors.at<Vec3b>(c,0)){
+                        l = c;
+                        break;
+                    }
+                }
+                assert(l != -1 && "GT with unknown color.");
+                label.at<int>(i,j) = l;
+            }
+        }
+        addTrainData(image, label);
+    }
+
+    for(const auto& paths : annotationsPathsVector){
+        Mat image = imread(paths.first.string());
+        Mat annotation = imread(paths.second.string());
+        assert(image.data);
+        assert(annotation.data);
+        assert(image.size() == annotation.size());
+        assert(image.type() == CV_8UC3);
+        assert(annotation.type() == CV_8UC3);
+        vector<vector<Point> > coords(numberOfClasses);
+        for(int i = 0; i < image.rows; i++){
+            for(int j = 0; j < image.cols; j++){
+                for(int c = 0; c < colors.rows; c++){
+                    if(annotation.at<Vec3b>(i,j) == colors.at<Vec3b>(c,0)){
+                        coords[c].push_back(Point(j,i));
+                        break;
+                    }
+                }
+            }
+        }
+        addTrainData(image, coords);
     }
 }
 

@@ -56,7 +56,7 @@ int main(int argc, char** argv){
     pixClassifier = PixelClassifierFactory::create(classifierConfFilePath, features);
 
     PRINT_DEBUG("Loading Train Data!");
-    pixClassifier->loadTrainData(trainDataFilePath);
+    pixClassifier->loadTrainData(trainDataFilePath, colorClassesFilePath);
     PRINT_DEBUG("Start Training!");
     pixClassifier->train();
     PRINT_DEBUG("Finished Training!");

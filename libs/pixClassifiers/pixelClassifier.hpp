@@ -36,7 +36,7 @@ public:
     //Adds this imputs on the training data set.
     virtual void addTrainData(Mat& imageSamples, Mat& imageLabels) = 0;
 
-    virtual bool loadTrainData(string path);
+    virtual bool loadTrainData(string trainDataConfFilePath, string colorsConfFilePath);
 
     virtual void train() = 0;
 
