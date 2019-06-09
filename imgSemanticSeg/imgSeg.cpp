@@ -136,6 +136,10 @@ void readParams(){
         cout << "Missing classifier conf file" << endl;
         exit(-1);
     }
+    if(!vm.count("tdata")){
+        cout << "Missing train data conf file" << endl;
+        exit(-1);
+    }
     inPaths = vm["in"].as<string>();
     outImagePath = vm.count("out") ? vm["out"].as<string>() : "out/";
     numberOfClasses = vm["n"].as<unsigned int>();

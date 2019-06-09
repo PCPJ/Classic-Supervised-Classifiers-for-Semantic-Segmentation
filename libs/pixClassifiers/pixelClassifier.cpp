@@ -21,6 +21,8 @@ PixelClassifier::~PixelClassifier()
 
 bool PixelClassifier::loadTrainData(string trainDataConfFilePath, string colorsConfFilePath)
 {
+    static const int numThread = omp_get_max_threads();
+
     FileStorage trainDataFile(trainDataConfFilePath, FileStorage::READ);
     FileStorage colorsConfFile(colorsConfFilePath, FileStorage::READ);
     if(!trainDataFile.isOpened()){
@@ -87,17 +89,20 @@ bool PixelClassifier::loadTrainData(string trainDataConfFilePath, string colorsC
         assert(image.type() == CV_8UC3);
         assert(gt.type() == CV_8UC3);
         Mat label = Mat(image.size(), CV_32SC1);
+        #pragma omp parallel for num_threads(numThread)
         for(int i = 0; i < image.rows; i++){
+            Vec3b* gtRowIcol = gt.ptr<Vec3b>(i);
+            int* labelRowIcol = label.ptr<int>(i);
             for(int j = 0; j < image.cols; j++){
                 int l = -1;
                 for(int c = 0; c < colors.rows; c++){
-                    if(gt.at<Vec3b>(i,j) == colors.at<Vec3b>(c,0)){
+                    if(gtRowIcol[j] == colors.at<Vec3b>(c,0)){
                         l = c;
                         break;
                     }
                 }
                 assert(l != -1 && "GT with unknown color.");
-                label.at<int>(i,j) = l;
+                labelRowIcol[j] = l;
             }
         }
         addTrainData(image, label);
@@ -112,14 +117,23 @@ bool PixelClassifier::loadTrainData(string trainDataConfFilePath, string colorsC
         assert(image.type() == CV_8UC3);
         assert(annotation.type() == CV_8UC3);
         vector<vector<Point> > coords(numberOfClasses);
+        vector<vector<vector<Point>>> threadsCords(numThread, vector<vector<Point>>(numberOfClasses));
+        #pragma omp parallel for num_threads(numThread)
         for(int i = 0; i < image.rows; i++){
+            int threadID = omp_get_thread_num();
+            Vec3b* annotationRowIcol = annotation.ptr<Vec3b>(i);
             for(int j = 0; j < image.cols; j++){
                 for(int c = 0; c < colors.rows; c++){
-                    if(annotation.at<Vec3b>(i,j) == colors.at<Vec3b>(c,0)){
-                        coords[c].push_back(Point(j,i));
+                    if(annotationRowIcol[j] == colors.at<Vec3b>(c,0)){
+                        threadsCords[threadID][c].push_back(Point(j,i));
                         break;
                     }
                 }
+            }
+        }
+        for(int t = 0; t < numThread; t++){
+            for(int c = 0; c < numberOfClasses; c++){
+                coords[c].insert(coords[c].end(), threadsCords[t][c].begin(), threadsCords[t][c].end());
             }
         }
         addTrainData(image, coords);
