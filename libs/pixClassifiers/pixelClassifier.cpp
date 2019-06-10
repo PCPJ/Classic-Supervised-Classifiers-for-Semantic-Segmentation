@@ -152,7 +152,7 @@ void PixelClassifier::run(Mat &inImage, Mat &outLabelImage)
         outLabelImage = Mat(inImage.size(), CV_32SC1, Scalar(-1));
     }
 
-    static const long int maxMemory = 8L * 1024L * 1024L * 1024L;//bytes
+    static const long int maxMemory = 2L * 1024L * 1024L * 1024L;//bytes
 
     long int inImageRows = inImage.rows;
     long int inImageCols = inImage.cols;
@@ -160,9 +160,9 @@ void PixelClassifier::run(Mat &inImage, Mat &outLabelImage)
     long int totalValues = inImageRows * inImageCols * numberOfFeatures;
     long int totalMemory =  totalValues * (long int)sizeof(float);
 
-    if(totalValues > std::numeric_limits<int>::max() || totalMemory > maxMemory){
+    if(totalValues > std::numeric_limits<uint>::max() || totalMemory > maxMemory){
         //Process window by window.
-        static const int windowSize = sqrt(std::numeric_limits<int>::max()/((float)numberOfFeatures));
+        static const int windowSize = sqrt(maxMemory/(numberOfFeatures*4));
         Mat outWindow;
         for(int i = 0; i < inImage.rows; i+=windowSize){
             for(int j = 0; j < inImage.cols; j+=windowSize){

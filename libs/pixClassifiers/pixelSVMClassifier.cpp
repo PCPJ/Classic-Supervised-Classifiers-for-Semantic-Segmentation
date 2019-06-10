@@ -72,14 +72,18 @@ void PixelSVMClassifier::addTrainData(Mat &sampleImage, vector<vector<Point2i> >
     uint samplesSize = 0;
     for(vector<Point2i>& v : samplePixCords)
         samplesSize += v.size();
+    vector<Point2i> allCords;
+    allCords.reserve(samplesSize);
+    for(vector<Point2i>& v : samplePixCords)
+        allCords.insert(allCords.end(), v.begin(), v.end());
+    assert(samplesSize == allCords.size());
     Mat newTrainData = Mat(samplesSize, dimensions, CV_32FC1);
     Mat newTrainDataLabels = Mat(samplesSize, 1, CV_32SC1);
 
+    featureCalculator->getFeatures(sampleImage, allCords, newTrainData);
     int sampleCount = 0;
     for(int i = 0; i < samplePixCords.size(); i++){
-        Mat features = Mat(newTrainData, Rect(0, sampleCount, dimensions, samplePixCords[i].size()));
         Mat trainDataLabelsI = Mat(newTrainDataLabels, Rect(0, sampleCount, 1, samplePixCords[i].size()));
-        featureCalculator->getFeatures(sampleImage, samplePixCords[i], features);
         trainDataLabelsI.setTo(i);
         sampleCount += samplePixCords[i].size();
     }

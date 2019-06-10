@@ -84,7 +84,7 @@ void PixelNNClassifier::addTrainData(Mat &sampleImage, vector<vector<Point2i> > 
     nn->setLayerSizes(layers);
     nn->setActivationFunction(ml::ANN_MLP::ActivationFunctions::SIGMOID_SYM);
     //opencv requires to reset the activation function if you modify the network layers.
-    //why? how know!?
+    //why? how knows!?
     ///////////////////////////////
 
     assert(sampleCount == samplesSize);
@@ -124,7 +124,7 @@ void PixelNNClassifier::addTrainData(Mat &imageSamples, Mat &imageLabels)
     nn->setLayerSizes(layers);
     nn->setActivationFunction(ml::ANN_MLP::ActivationFunctions::SIGMOID_SYM);
     //opencv requires to reset the activation function if you modify the network layers.
-    //why? how know!?
+    //why? how knows!?
     ///////////////////////////////
 
     assert(trainData.rows == trainDataLabels.rows);
