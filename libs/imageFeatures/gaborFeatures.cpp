@@ -42,10 +42,13 @@ void GaborFeature::getFeatures(const Mat &image, vector<Point2i> &pixCoordinates
         assert(outFeatures.type() == CV_32FC1);
     }
 
+    PRINT_DEBUG("Gabor Features Start!");
+    static const int numThread = omp_get_max_threads();
+
     Mat seedImage;
     seedFeature->getFeatures(image, seedImage);
 
-    vector<Mat> coordinatesFeatures;
+    vector<Mat> coordinatesFeatures(gabor.kernelsSize()+1);
     Mat seedCoordsF = Mat(pixCoordinates.size(), seedFeature->getDimentions(), CV_32FC1);
     for(int p = 0; p < pixCoordinates.size(); p++){
         const Point2i& coord = pixCoordinates[p];
@@ -53,11 +56,12 @@ void GaborFeature::getFeatures(const Mat &image, vector<Point2i> &pixCoordinates
         float* coordinatesPtr = seedCoordsF.ptr<float>(p, 0);
         memcpy(coordinatesPtr, seedPixPtr, sizeof(float)*seedFeature->getDimentions());
     }
-    coordinatesFeatures.push_back(seedCoordsF);
+    coordinatesFeatures[0] = seedCoordsF;
 
-    Mat convolved;
     seedImage = seedImage.reshape(seedFeature->getDimentions(), image.rows);
+    #pragma omp parallel for num_threads(numThread)
     for(int k = 0; k < gabor.kernelsSize(); k++){
+        Mat convolved;
         gabor.convolution(seedImage, k, convolved);
         convolved = convolved.reshape(1, image.rows);
         Mat coordsF = Mat(pixCoordinates.size(), seedFeature->getDimentions(), CV_32FC1);
@@ -67,11 +71,12 @@ void GaborFeature::getFeatures(const Mat &image, vector<Point2i> &pixCoordinates
             float* coordinatesPtr = coordsF.ptr<float>(p, 0);
             memcpy(coordinatesPtr, convolvedPixPtr, sizeof(float)*seedFeature->getDimentions());
         }
-        coordinatesFeatures.push_back(coordsF);
+        coordinatesFeatures[k+1] = coordsF;
     }
     cv::hconcat(coordinatesFeatures, outFeatures);
     assert(outFeatures.cols == dimensions);
     assert(outFeatures.rows == pixCoordinates.size());
+    PRINT_DEBUG("Gabor Features End!");
 }
 
 void GaborFeature::getFeatures(const Mat &image, Mat &outFeatureImage)
