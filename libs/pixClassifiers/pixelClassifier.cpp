@@ -152,7 +152,7 @@ void PixelClassifier::run(Mat &inImage, Mat &outLabelImage)
         outLabelImage = Mat(inImage.size(), CV_32SC1, Scalar(-1));
     }
 
-    static const long int maxMemory = 2L * 1024L * 1024L * 1024L;//bytes
+    static const long int maxMemory = 8L * 1024L * 1024L * 1024L;//bytes
 
     long int inImageRows = inImage.rows;
     long int inImageCols = inImage.cols;
