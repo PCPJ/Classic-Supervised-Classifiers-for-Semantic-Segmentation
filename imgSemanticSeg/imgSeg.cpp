@@ -71,10 +71,10 @@ int main(int argc, char** argv){
 
         inImage = imread(inImagePath.c_str());
         if(!inImage.data){
-            PRINT_DEBUG("ERROR WHILE OPENING IMAGE: %s", inImagePath);
+            PRINT_DEBUG("ERROR WHILE OPENING IMAGE: %s", inImagePath.c_str());
             exit(-1);
         }
-        PRINT_DEBUG("image opened");
+        PRINT_DEBUG("Image Opened.");
         PRINT_DEBUG("Input image size = %dx%d", inImage.cols, inImage.rows);
 
         mapper->doSegmentation(inImage, labelImage);
@@ -150,21 +150,35 @@ void readParams(){
 }
 
 void readInImagesPaths(){
-    string extension = inPaths.substr(inPaths.find_last_of(".") + 1);
-    assert(extension == "png" || extension == "tif" || extension == "yml");
-    if(extension == "yml"){
-        cv::FileStorage file(inPaths, cv::FileStorage::READ);
-        assert(file.isOpened());
-        int numberOfImages;
-        file["numberOfImages"] >> numberOfImages;
-        for(int i = 0; i < numberOfImages; i++){
-            string path;
-            file["image"+to_string(i)] >> path;
-            inImagesPaths.push_back(fs::path(path));
+    fs::path path(inPaths);
+    vector<fs::path> paths;
+    if(fs::status(path).type() == fs::file_type::directory){
+        paths.push_back(path);
+    }else{
+        assert(path.extension() == ".png" || path.extension() == ".tif" || path.extension() == ".jpg" || path.extension() == ".yml");
+        if(path.extension() == ".yml"){
+            cv::FileStorage ymlFile(inPaths, cv::FileStorage::READ);
+            assert(ymlFile.isOpened());
+            int numberOfPaths;
+            ymlFile["numberOfPaths"] >> numberOfPaths;
+            for(int i = 0; i < numberOfPaths; i++){
+                string pathI;
+                ymlFile["path"+to_string(i)] >> pathI;
+                paths.push_back(fs::path(pathI));
+            }
+        }
+        else{
+            inImagesPaths.push_back(fs::path(inPaths));
         }
     }
-    else{
-        inImagesPaths.push_back(fs::path(inPaths));
+    for(const fs::path& p : paths){
+        for(const fs::directory_entry& entry : fs::directory_iterator(p)){
+            if(entry.status().type() != fs::file_type::directory){
+                if(entry.path().extension() == ".png" || entry.path().extension() == ".jpg"){
+                    inImagesPaths.push_back(entry.path());
+                }
+            }
+        }
     }
 }
 
