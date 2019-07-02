@@ -22,7 +22,7 @@ std::vector<double> ImgIOU::measure(const Mat &confusionMat)
     assert(confusionMat.type() == CV_32SC1);
 
     double sumIOU = 0;
-    vector<double> classIOU(numberOfClass, 0);
+    vector<double> classIOU;
     for(int c = 0; c < numberOfClass; c++){
         double tp = confusionMat.at<int>(c,c);
         double fn = cv::sum(confusionMat.col(c))[0] - tp;
@@ -30,10 +30,10 @@ std::vector<double> ImgIOU::measure(const Mat &confusionMat)
         double iou = 0;
         if(tp != 0)
             iou = tp/(tp + fn + fp);
-        classIOU[c] = iou;
+        classIOU.push_back(iou);
         sumIOU += iou;
     }
-    classIOU[numberOfClass] = sumIOU/numberOfClass;
+    classIOU.push_back(sumIOU/numberOfClass);
     return classIOU;
 }
 

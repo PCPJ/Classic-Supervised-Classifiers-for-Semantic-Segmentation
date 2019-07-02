@@ -160,19 +160,17 @@ int main(int argc, char** argv){
     names.push_back("SVMRBF");
     names.push_back("NN");
     names.push_back("RTree");
-    for(auto& name : names){
-        results.push_back(Mat::zeros(s, CV_8UC3));
-    }
-    colors.push_back(Vec3b(0,0,255));
+    results = vector<Mat>(names.size(), Mat::zeros(s, CV_8UC1));
     colors.push_back(Vec3b(0,255,0));
-    colors.push_back(Vec3b(255,0,0));
     colors.push_back(Vec3b(0,255,255));
+    colors.push_back(Vec3b(0,0,255));
+    colors.push_back(Vec3b(255,0,0));
     colors.push_back(Vec3b(255,0,255));
     colors.push_back(Vec3b(255,255,0));
-    colorsBack.push_back(Vec3b(128,128,255));
     colorsBack.push_back(Vec3b(128,255,128));
-    colorsBack.push_back(Vec3b(255,128,128));
     colorsBack.push_back(Vec3b(128,255,255));
+    colorsBack.push_back(Vec3b(128,128,255));
+    colorsBack.push_back(Vec3b(255,128,128));
     colorsBack.push_back(Vec3b(255,128,255));
     colorsBack.push_back(Vec3b(255,255,128));
 
@@ -212,23 +210,6 @@ int main(int argc, char** argv){
             pointSamples.push_back(vector<Point2i>());
         }
         else if(key == 'c'){
-//            for(int c = 0; c < samples.size(); c++){
-//                cout << "class " << c << " - size: " << samples[c].size() << endl;
-//                for(int i = 0; i < samples[c].size(); i++){
-//                    cout << samples[c][i] << endl;
-//                }
-//            }
-//            int maxSize = std::numeric_limits<int>::min();
-//            for(int c = 0; c < samples.size(); c++){
-//                maxSize = std::max(maxSize, (int)(samples[c].size()));
-//            }
-//            cv::RNG rng(0xFFFFFFFF);
-//            for(int c = 0; c < samples.size(); c++){
-//                for(int i = samples[c].size(); i < maxSize; i++){
-//                    samples[c].push_back(samples[c][rng.uniform(0, samples[c].size())]);
-//                }
-//            }
-
             for(auto& classifier: classifiers){
                 classifier->setTrainData(drawMat, pointSamples);
             }

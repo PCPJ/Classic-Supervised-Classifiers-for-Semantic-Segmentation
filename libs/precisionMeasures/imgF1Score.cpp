@@ -22,7 +22,7 @@ vector<double> ImgF1Score::measure(const Mat& confusionMat)
     assert(confusionMat.type() == CV_32SC1);
 
     double sumF1 = 0;
-    vector<double> classF1(numberOfClass, 0);
+    vector<double> classF1;
     for(int c = 0; c < numberOfClass; c++){
         double tp = confusionMat.at<int>(c,c);
         double fn = cv::sum(confusionMat.col(c))[0] - tp;
@@ -33,10 +33,10 @@ vector<double> ImgF1Score::measure(const Mat& confusionMat)
             double recall = tp/(tp+fn);
             f1 = 2.0 * (precision*recall) / (precision+recall);
         }
-        classF1[c] = f1;
+        classF1.push_back(f1);
         sumF1 += f1;
     }
-    classF1[numberOfClass] = sumF1/numberOfClass;
+    classF1.push_back(sumF1/numberOfClass);
     return classF1;
 }
 

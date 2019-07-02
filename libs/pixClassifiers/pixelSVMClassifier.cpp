@@ -148,7 +148,7 @@ void PixelSVMClassifier::train()
     cGrid->maxVal = 1000;
     gammaGrid->logStep = 2;
     gammaGrid->minVal = 1e-5;
-    gammaGrid->maxVal = 100;
+    gammaGrid->maxVal = 1000;
 
     cout << "C grid - logStep =  " << cGrid->logStep << ", minVal =  " << cGrid->minVal << ", maxVal = " << cGrid->maxVal << endl;
     cout << "Gamma grid - logStep =  " << gammaGrid->logStep << ", minVal =  " << gammaGrid->minVal << ", maxVal = " << gammaGrid->maxVal << endl;

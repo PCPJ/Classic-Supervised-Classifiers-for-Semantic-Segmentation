@@ -73,12 +73,18 @@ void PixelRandomForestClassifier::addTrainData(Mat &sampleImage, vector<vector<P
     Mat newTrainDataLabels = Mat(samplesSize, 1, CV_32SC1);
 
     featureCalculator->getFeatures(sampleImage, allCords, newTrainData);
+
+
+    cv::FileStorage file("rawTrainData.yml", cv::FileStorage::WRITE);
+    file << "numberOfClasses" << (int)samplePixCords.size();
     int sampleCount = 0;
     for(int i = 0; i < samplePixCords.size(); i++){
         Mat trainDataLabelsI = Mat(newTrainDataLabels, Rect(0, sampleCount, 1, samplePixCords[i].size()));
+        file << "samples"+to_string(i) << newTrainData(Rect(0, sampleCount, dimensions, samplePixCords[i].size()));//remove
         trainDataLabelsI.setTo(i);
         sampleCount += samplePixCords[i].size();
     }
+    file.release();
 
     if(trainData.data){
         vconcat(trainData, newTrainData, trainData);

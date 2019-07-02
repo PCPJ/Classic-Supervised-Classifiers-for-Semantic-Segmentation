@@ -96,6 +96,7 @@ int main(int argc, char** argv){
     outFile.writeComment("--------------");
     outFile << "confusionMat" << confusionMat;
     outFile << "confusionMatPercent" << confusionMatFloat;
+    outFile.release();
     PRINT_DEBUG("Saving %s", outPath.c_str());
 //    system("echo end >> date.txt && date >> date.txt");
 }
